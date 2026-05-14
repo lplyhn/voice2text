@@ -29,6 +29,12 @@ export async function POST(req: NextRequest) {
       let output = "";
       let errorOutput = "";
 
+      // Handle request cancellation
+      req.signal.addEventListener("abort", () => {
+        pythonProcess.kill();
+        reject(new Error("Transcription aborted by user"));
+      });
+
       pythonProcess.stdout.on("data", (data) => {
         output += data.toString();
       });

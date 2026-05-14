@@ -10,7 +10,8 @@ import {
   RotateCcw, 
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Square
 } from "lucide-react";
 import axios from "axios";
 
@@ -24,6 +25,7 @@ export default function VoiceToText() {
   
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 
@@ -61,6 +63,10 @@ export default function VoiceToText() {
     setError(null);
     setTranscription("");
 
+    // 初始化 AbortController
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     const formData = new FormData();
     formData.append("file", file);
 
@@ -69,13 +75,26 @@ export default function VoiceToText() {
         headers: {
           "Content-Type": "multipart/form-data",
         },
+        signal: controller.signal,
       });
       setTranscription(response.data.text);
     } catch (err: any) {
-      console.error(err);
-      setError(err.response?.data?.error || "转换失败，请重试");
+      if (axios.isCancel(err)) {
+        console.log("Transcription cancelled");
+        setError("已终止转写任务");
+      } else {
+        console.error(err);
+        setError(err.response?.data?.error || "转换失败，请重试");
+      }
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleAbort = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
   };
 
@@ -208,29 +227,30 @@ export default function VoiceToText() {
             </div>
           )}
 
-          <button
-            onClick={handleUpload}
-            disabled={!file || isLoading}
-            className={`
-              w-full py-4 rounded-xl font-semibold text-white shadow-lg
-              transition-all duration-200 flex items-center justify-center gap-2
-              ${!file || isLoading 
-                ? 'bg-gray-400 cursor-not-allowed shadow-none' 
-                : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-0.5'}
-            `}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="animate-spin" />
-                正在转换中...
-              </>
-            ) : (
-              <>
-                <CheckCircle2 size={20} />
-                开始转换
-              </>
-            )}
-          </button>
+          {isLoading ? (
+            <button
+              onClick={handleAbort}
+              className="w-full py-4 rounded-xl font-semibold text-white shadow-lg bg-red-500 hover:bg-red-600 transition-all duration-200 flex items-center justify-center gap-2 transform hover:-translate-y-0.5"
+            >
+              <Square size={20} fill="currentColor" />
+              终止转写
+            </button>
+          ) : (
+            <button
+              onClick={handleUpload}
+              disabled={!file}
+              className={`
+                w-full py-4 rounded-xl font-semibold text-white shadow-lg
+                transition-all duration-200 flex items-center justify-center gap-2
+                ${!file 
+                  ? 'bg-gray-400 cursor-not-allowed shadow-none' 
+                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transform hover:-translate-y-0.5'}
+              `}
+            >
+              <CheckCircle2 size={20} />
+              开始转换
+            </button>
+          )}
         </div>
 
         {/* Right Column: Results */}
