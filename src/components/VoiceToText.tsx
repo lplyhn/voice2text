@@ -67,12 +67,18 @@ export default function VoiceToText() {
   const handleDownload = () => {
     if (!transcription) return;
     const element = document.createElement("a");
-    const file = new Blob([transcription], { type: "text/plain" });
-    element.href = URL.createObjectURL(file);
-    element.download = `${file.name || "transcription"}.txt`;
+    const blob = new Blob([transcription], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    
+    // 使用原文件名或默认名称
+    const fileName = file ? file.name.split('.')[0] : "transcription";
+    
+    element.href = url;
+    element.download = `${fileName}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+    URL.revokeObjectURL(url);
   };
 
   const togglePlay = () => {
