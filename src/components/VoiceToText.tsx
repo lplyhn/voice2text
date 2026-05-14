@@ -25,17 +25,32 @@ export default function VoiceToText() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      if (selectedFile.type.startsWith("audio/") || selectedFile.type === "video/mp4") {
-        setFile(selectedFile);
-        setAudioUrl(URL.createObjectURL(selectedFile));
-        setTranscription("");
-        setError(null);
-      } else {
+      // 检查文件类型
+      const isValidType = selectedFile.type.startsWith("audio/") || selectedFile.type === "video/mp4";
+      if (!isValidType) {
         setError("请上传有效的音频文件 (mp3, wav, m4a 等)");
+        setFile(null);
+        setAudioUrl(null);
+        return;
       }
+
+      // 检查文件大小
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        setError("文件大小超过限制 (最大 25MB)");
+        setFile(null);
+        setAudioUrl(null);
+        return;
+      }
+
+      setFile(selectedFile);
+      setAudioUrl(URL.createObjectURL(selectedFile));
+      setTranscription("");
+      setError(null);
     }
   };
 
