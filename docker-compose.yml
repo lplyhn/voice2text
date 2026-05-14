@@ -1,0 +1,14 @@
+services:
+  voice2text:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voice2text-app
+    ports:
+      - "3000:3000"
+    volumes:
+      # 挂载模型目录，避免每次容器重启都重新下载（如果在 Dockerfile 中没打包的话）
+      - ./models:/app/models
+    restart: always
+    environment:
+      - NODE_ENV=production

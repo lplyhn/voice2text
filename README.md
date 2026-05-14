@@ -31,6 +31,22 @@ npm run dev
 
 访问 [http://localhost:3000](http://localhost:3000) 即可开始使用。
 
+## Docker 部署
+
+系统支持使用 Docker Compose 进行一键化容器部署，已集成 Node.js、Python、FFmpeg 及 Vosk 环境。
+
+### 1. 构建并启动
+
+```bash
+docker-compose up -d --build
+```
+
+### 2. 访问应用
+
+访问 [http://localhost:3000](http://localhost:3000)。
+
+*注：Docker 镜像构建过程中会自动下载语音模型（约 50MB），确保网络环境良好。*
+
 ## 技术栈
 
 - **Frontend**: Next.js 15, Tailwind CSS 4, Lucide React
